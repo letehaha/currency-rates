@@ -3,7 +3,7 @@ use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use currency_rates::{seed, Config, RatesRepository};
+use currency_rates::{Config, RatesRepository, seed};
 
 #[tokio::main]
 async fn main() -> Result<()> {

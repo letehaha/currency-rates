@@ -1,14 +1,14 @@
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use super::handlers::{
-    get_currencies, get_historical, get_latest, health_check, root, trigger_provider_sync,
-    trigger_sync, AppState,
+    AppState, get_currencies, get_historical, get_latest, health_check, root,
+    trigger_provider_sync, trigger_sync,
 };
 
 /// Create the API router with all routes

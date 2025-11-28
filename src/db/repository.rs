@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use sqlx::{sqlite::SqlitePool, FromRow, Row};
+use sqlx::{FromRow, Row, sqlite::SqlitePool};
 use std::collections::HashMap;
 
 use crate::error::Result;

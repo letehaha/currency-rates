@@ -5,8 +5,8 @@ use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use currency_rates::{
-    api::{self, AppState},
     Config, EcbProvider, NbuProvider, ProviderRegistry, RatesRepository, RatesService,
+    api::{self, AppState},
 };
 
 #[tokio::main]
@@ -64,10 +64,13 @@ async fn main() -> anyhow::Result<()> {
         let sync_state = state.clone();
         tokio::spawn(async move {
             tracing::info!("Running initial sync in background...");
-            if let Err(e) = sync_state.service.sync_all_providers().await {
-                tracing::error!("Initial sync failed: {}", e);
-            } else {
-                tracing::info!("Initial sync completed");
+            match sync_state.service.sync_all_providers().await {
+                Err(e) => {
+                    tracing::error!("Initial sync failed: {}", e);
+                }
+                _ => {
+                    tracing::info!("Initial sync completed");
+                }
             }
         });
     }

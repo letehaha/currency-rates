@@ -35,7 +35,7 @@ A Rust-based currency exchange rates API server that fetches rates from multiple
 
 ### Prerequisites
 
-- Rust 1.75+ (install via [rustup](https://rustup.rs/))
+- Rust 1.85+ (install via [rustup](https://rustup.rs/))
 - fulfilled `.env` file from example
 
 ### Run
