@@ -286,7 +286,7 @@ impl RatesService {
     }
 
     /// Get available currencies
-    pub async fn get_currencies(&self) -> Result<HashMap<String, String>> {
+    pub async fn get_currencies(&self) -> Result<crate::models::CurrenciesResponse> {
         self.repository.get_currencies(None).await
     }
 

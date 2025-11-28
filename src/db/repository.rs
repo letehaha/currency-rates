@@ -3,7 +3,7 @@ use sqlx::{sqlite::SqlitePool, FromRow, Row};
 use std::collections::HashMap;
 
 use crate::error::Result;
-use crate::models::{DailyRates, ExchangeRate};
+use crate::models::{CurrencyInfo, DailyRates, ExchangeRate};
 
 /// Database row for exchange rates
 #[derive(Debug, FromRow)]
@@ -17,11 +17,13 @@ struct RateRow {
     provider: String,
 }
 
-/// Database row for currencies
+/// Database row for currencies with date range
 #[derive(Debug, FromRow)]
-struct CurrencyRow {
+struct CurrencyWithDatesRow {
     code: String,
     name: String,
+    min_date: Option<String>,
+    max_date: Option<String>,
 }
 
 /// Repository for exchange rate data
@@ -319,16 +321,22 @@ impl RatesRepository {
     }
 
     /// Get all available currencies from exchange_rates (source of truth)
-    pub async fn get_currencies(&self, provider: Option<&str>) -> Result<HashMap<String, String>> {
-        let rows: Vec<CurrencyRow> = match provider {
+    pub async fn get_currencies(
+        &self,
+        provider: Option<&str>,
+    ) -> Result<HashMap<String, CurrencyInfo>> {
+        let rows: Vec<CurrencyWithDatesRow> = match provider {
             Some(p) => {
                 sqlx::query_as(
                     r#"
-                    SELECT DISTINCT er.target_currency as code,
-                           COALESCE(c.name, er.target_currency) as name
+                    SELECT er.target_currency as code,
+                           COALESCE(c.name, er.target_currency) as name,
+                           MIN(er.date) as min_date,
+                           MAX(er.date) as max_date
                     FROM exchange_rates er
                     LEFT JOIN currencies c ON er.target_currency = c.code
                     WHERE er.provider = ?
+                    GROUP BY er.target_currency, c.name
                     "#,
                 )
                 .bind(p)
@@ -338,10 +346,13 @@ impl RatesRepository {
             None => {
                 sqlx::query_as(
                     r#"
-                    SELECT DISTINCT er.target_currency as code,
-                           COALESCE(c.name, er.target_currency) as name
+                    SELECT er.target_currency as code,
+                           COALESCE(c.name, er.target_currency) as name,
+                           MIN(er.date) as min_date,
+                           MAX(er.date) as max_date
                     FROM exchange_rates er
                     LEFT JOIN currencies c ON er.target_currency = c.code
+                    GROUP BY er.target_currency, c.name
                     "#,
                 )
                 .fetch_all(&self.pool)
@@ -349,9 +360,23 @@ impl RatesRepository {
             }
         };
 
-        let mut currencies: HashMap<String, String> = HashMap::new();
+        let mut currencies: HashMap<String, CurrencyInfo> = HashMap::new();
         for row in rows {
-            currencies.insert(row.code, row.name);
+            let min_date = row
+                .min_date
+                .and_then(|d| NaiveDate::parse_from_str(&d, "%Y-%m-%d").ok());
+            let max_date = row
+                .max_date
+                .and_then(|d| NaiveDate::parse_from_str(&d, "%Y-%m-%d").ok());
+
+            currencies.insert(
+                row.code,
+                CurrencyInfo {
+                    name: row.name,
+                    min_date,
+                    max_date,
+                },
+            );
         }
 
         Ok(currencies)

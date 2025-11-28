@@ -47,8 +47,18 @@ pub struct TimeSeriesResponse {
     pub rates: HashMap<NaiveDate, HashMap<String, f64>>,
 }
 
+/// Currency information including date range
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrencyInfo {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_date: Option<NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_date: Option<NaiveDate>,
+}
+
 /// Response format for /currencies endpoint
-pub type CurrenciesResponse = HashMap<String, String>;
+pub type CurrenciesResponse = HashMap<String, CurrencyInfo>;
 
 /// Provider info for health check
 #[derive(Debug, Serialize, Deserialize)]
