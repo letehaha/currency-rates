@@ -11,15 +11,25 @@ A Rust-based currency exchange rates API server that fetches rates from multiple
 - ⏰ **Automatic Sync**: Scheduled updates via cron
 - 🔌 **Extensible**: Easy to add new data providers
 
-Supported currencies:
+## Supported Currencies
 
-```
-["USD", "PHP", "NZD", "MDL", "KZT", "VND", "ILS", "UAH", "MYR", "KRW", "SEK", "JPY",
-"GEL", "SIT", "RON", "HKD", "SKK", "TRL", "LVL", "PLN", "BGN", "HRK", "EGP", "IDR",
-"THB", "BRL", "RUB", "INR", "DKK", "CZK", "EEK", "LBP", "SGD", "MXN", "ZAR", "LTL",
-"SAR", "MTL", "CAD", "CHF", "HUF", "GBP", "TRY", "ISK", "CYP", "ROL", "AUD", "EUR",
-"NOK", "CNY"]
-```
+**Total: 38 unique currencies** (30 from ECB, 8 from NBU)
+
+### From 1999-01-04 (26 currencies):
+
+**ECB (18):** AUD, CAD, CHF, CZK, DKK, EUR, GBP, HKD, HUF, ISK, JPY, KRW, NOK, NZD, PLN, SEK, SGD, ZAR
+
+**NBU (8):** EGP, GEL, KZT, LBP, MDL, SAR, UAH, VND
+
+### Added later (12 currencies):
+
+- **2000-07-19:** BGN _(ECB)_
+- **2005-01-03:** TRY _(ECB)_
+- **2005-04-01:** CNY, IDR, MYR, PHP, THB _(ECB)_
+- **2005-07-01:** RON _(ECB)_
+- **2008-01-02:** BRL, MXN _(ECB)_
+- **2009-01-02:** INR _(ECB)_
+- **2011-01-03:** ILS _(ECB)_
 
 ## Quick Start
 
@@ -41,7 +51,7 @@ RUST_LOG=debug cargo run
 The server will:
 
 1. Create the SQLite database
-2. Seed DB with available historical data
+2. Seed DB with available historical data (up to 2025-11-27)
 3. Fetch historical rates from all providers up to today
 4. Start the HTTP server on `http://0.0.0.0:8080`
 
@@ -54,7 +64,7 @@ To avoid fetching all historical data from APIs every time you start the server 
 1. **Obtain seed data files** (or use the provided ones in `seed_data/`):
 
    - `ecb-full-hist.xml` - ECB historical data (from 1999)
-   - `nbu-kzt-full-hist.json` - NBU historical data
+   - `nbu-full-hist.json` - NBU historical data (from 1999)
 
 2. **Run the seeder**:
 

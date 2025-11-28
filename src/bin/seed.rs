@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
         .ok()
         .map(PathBuf::from)
         .or_else(|| {
-            let default = PathBuf::from("seed_data/nbu-kzt-full-hist.json");
+            let default = PathBuf::from("seed_data/nbu-full-hist.json");
             if default.exists() {
                 Some(default)
             } else {
@@ -79,7 +79,7 @@ async fn main() -> Result<()> {
             "No seed files found. Please provide ECB_SEED_PATH and/or NBU_SEED_PATH environment variables, \
             or place seed files in seed_data/ directory:\n\
             - seed_data/ecb-full-hist.xml\n\
-            - seed_data/nbu-kzt-full-hist.json"
+            - seed_data/nbu-full-hist.json"
         );
     }
 
