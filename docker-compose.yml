@@ -1,0 +1,44 @@
+services:
+  currency-rates-api:
+    build: .
+    image: currency-rates-api
+    container_name: currency-rates
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persist database on host
+      - ./docker-data:/app/data
+    environment:
+      # Database path in mounted volume
+      - DATABASE_URL=sqlite:/app/data/currency_rates.db?mode=rwc
+      - HOST=0.0.0.0
+      - PORT=8080
+      - DEFAULT_API_BASE=USD
+      # Set to false if you pre-seed the database
+      - SYNC_ON_STARTUP=true
+      - SYNC_CRON=0 0 16 * * *
+      - RUST_LOG=currency_rates=info,tower_http=debug
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  # One-time database seeding service (run manually)
+  # Usage: docker-compose run --rm seed-db
+  seed-db:
+    image: currency-rates-api
+    container_name: currency-rates-seeder
+    volumes:
+      # Use the same database volume
+      - ./docker-data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:/app/data/currency_rates.db?mode=rwc
+      - RUST_LOG=currency_rates=info
+    entrypoint: ["seed-db"]
+    profiles:
+      # This service won't start with docker-compose up
+      # It must be run explicitly
+      - tools

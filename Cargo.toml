@@ -1,0 +1,55 @@
+[package]
+name = "currency-rates"
+version = "0.1.0"
+edition = "2021"
+description = "Currency rates API server with multiple providers"
+license = "MIT"
+rust-version = "1.75"
+default-run = "currency-rates"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# HTTP client for fetching rates
+reqwest = { version = "0.11", features = ["json"] }
+
+# XML parsing (for ECB)
+quick-xml = { version = "0.31", features = ["serialize"] }
+
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Async traits
+async-trait = "0.1"
+
+# Configuration
+dotenvy = "0.15"
+
+# Scheduling
+tokio-cron-scheduler = "0.10"
+
+# Pin to avoid edition2024 issue with older Rust
+home = "=0.5.9"
+base64ct = "=1.6.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
