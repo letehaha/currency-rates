@@ -22,8 +22,8 @@ pub fn parse_nbu_seed_file(path: &Path) -> Result<Vec<DailyRates>> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read NBU seed file: {}", path.display()))?;
 
-    let data: HashMap<String, Vec<NbuBatchRate>> = serde_json::from_str(&content)
-        .context("Failed to parse NBU seed JSON")?;
+    let data: HashMap<String, Vec<NbuBatchRate>> =
+        serde_json::from_str(&content).context("Failed to parse NBU seed JSON")?;
 
     // Organize by date
     let mut by_date: HashMap<NaiveDate, HashMap<String, f64>> = HashMap::new();
@@ -217,6 +217,9 @@ pub async fn seed_database(
         }
     }
 
-    tracing::info!("Database seeding completed. Total records: {}", total_records);
+    tracing::info!(
+        "Database seeding completed. Total records: {}",
+        total_records
+    );
     Ok(())
 }

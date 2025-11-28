@@ -12,7 +12,7 @@ env:
 
 jobs:
   fmt:
-    name: Rustfmt
+    name: Code Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +23,8 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-  clippy:
-    name: Clippy
+  linter:
+    name: Linter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
