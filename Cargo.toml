@@ -5,6 +5,7 @@ edition = "2021"
 description = "Currency rates API server with multiple providers"
 license = "MIT"
 rust-version = "1.75"
+default-run = "currency-rates"
 
 [dependencies]
 # Web framework

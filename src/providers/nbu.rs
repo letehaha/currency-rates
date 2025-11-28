@@ -13,7 +13,6 @@ const NBU_BATCH_URL: &str = "https://bank.gov.ua/NBU_Exchange/exchange_site";
 /// Currencies to fetch from NBU (base currency is added dynamically)
 /// These are regional/unique currencies best sourced from NBU
 const NBU_CURRENCIES: &[&str] = &[
-    "UAH", // Ukrainian Hryvnia
     "KZT", // Kazakhstani Tenge
     "LBP", // Lebanese Pound
     "MDL", // Moldovan Leu

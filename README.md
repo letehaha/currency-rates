@@ -39,6 +39,58 @@ The server will:
 2. Fetch historical rates from all providers
 3. Start the HTTP server on `http://0.0.0.0:8080`
 
+## Database Seeding
+
+To avoid fetching all historical data from APIs every time you start the server with a fresh database, you can pre-seed the database with historical data.
+
+### Using Seed Files
+
+1. **Obtain seed data files** (or use the provided ones in `seed_data/`):
+
+   - `ecb-full-hist.xml` - ECB historical data (from 1999)
+   - `nbu-kzt-full-hist.json` - NBU historical data
+
+2. **Run the seeder**:
+
+```bash
+# Local development
+cargo run --release --bin seed
+
+# With custom paths
+ECB_SEED_PATH=/path/to/ecb.xml NBU_SEED_PATH=/path/to/nbu.json cargo run --release --bin seed
+```
+
+### Docker Seeding
+
+#### One-time seeding before starting the server:
+
+```bash
+# Build the image
+docker-compose build
+
+# Run the seeder (one-time)
+docker-compose run --rm seed-db
+
+# Start the server (with SYNC_ON_STARTUP=false to skip initial sync)
+docker-compose up -d currency-rates-api
+```
+
+#### Update environment variables:
+
+After seeding, you can set `SYNC_ON_STARTUP=false` in `docker-compose.yml` to prevent the server from fetching historical data on startup, as the database is already populated.
+
+```yaml
+environment:
+  - SYNC_ON_STARTUP=false # Database is already seeded
+```
+
+### Benefits
+
+- **Faster startup**: No need to fetch 25+ years of historical data on first run
+- **Reduced API calls**: Avoid hitting provider APIs unnecessarily
+- **Offline setup**: Pre-populate database without internet connection
+- **Reproducible**: Same historical data across environments
+
 ## Configuration
 
 Environment variables (or `.env` file):
@@ -248,7 +300,10 @@ CREATE TABLE sync_log (
 ## Development
 
 ```bash
-# Run with debug logging
+# Seed the DB
+cargo run --release --bin seed
+
+# Run the server with debug logging
 RUST_LOG=debug cargo run
 
 # Run tests
@@ -261,20 +316,38 @@ cargo clippy
 cargo fmt
 ```
 
-## Docker (Optional)
+## Docker
 
-```dockerfile
-FROM rust:1.75-slim as builder
-WORKDIR /app
-COPY . .
-RUN cargo build --release
+### Quick Start with Docker
 
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/currency-rates /usr/local/bin/
-EXPOSE 8080
-CMD ["currency-rates"]
+```bash
+# Build and start the server
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f currency-rates-api
+
+# Stop
+docker-compose down
 ```
+
+### With Database Seeding
+
+For faster startup and reduced API calls, seed the database first:
+
+```bash
+# Build the image
+docker-compose build
+
+# Seed the database (one-time operation, takes a few minutes)
+docker-compose run --rm seed-db
+
+# Start the server with seeding disabled
+# (Edit docker-compose.yml: set SYNC_ON_STARTUP=false)
+docker-compose up -d currency-rates-api
+```
+
+The database is persisted in `./docker-data/` on the host.
 
 ## License
 

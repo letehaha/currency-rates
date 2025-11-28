@@ -148,14 +148,44 @@ impl RatesRepository {
         Ok(())
     }
 
-    /// Store multiple daily rates (bulk insert)
+    /// Store multiple daily rates (bulk insert with single transaction)
     pub async fn store_daily_rates_batch(&self, rates: &[DailyRates]) -> Result<usize> {
         let mut count = 0;
 
+        // Use a single transaction for all inserts
+        let mut tx = self.pool.begin().await?;
+
         for daily in rates {
-            self.store_daily_rates(daily).await?;
-            count += daily.rates.len();
+            for (currency, rate) in &daily.rates {
+                if currency == &daily.base_currency {
+                    continue; // Skip base currency (rate would be 1.0)
+                }
+
+                sqlx::query(
+                    r#"
+                    INSERT OR REPLACE INTO exchange_rates (date, base_currency, target_currency, rate, provider)
+                    VALUES (?, ?, ?, ?, ?)
+                    "#,
+                )
+                .bind(daily.date.to_string())
+                .bind(&daily.base_currency)
+                .bind(currency)
+                .bind(rate)
+                .bind(&daily.provider)
+                .execute(&mut *tx)
+                .await?;
+
+                count += 1;
+            }
+
+            // Log progress every 100 days
+            if count % 1000 == 0 {
+                tracing::info!("Inserted {} records so far...", count);
+            }
         }
+
+        // Commit the transaction
+        tx.commit().await?;
 
         Ok(count)
     }
