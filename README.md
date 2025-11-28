@@ -14,30 +14,36 @@ A Rust-based currency exchange rates API server that fetches rates from multiple
 Supported currencies:
 
 ```
-[
-"USD", "PHP", "NZD", "MDL", "KZT", "VND", "ILS", "UAH", "MYR", "KRW", "SEK", "JPY", "GEL", "SIT", "RON", "HKD", "SKK", "TRL", "LVL", "PLN", "BGN", "HRK", "EGP", "IDR", "THB", "BRL", "RUB", "INR", "DKK", "CZK", "EEK", "LBP", "SGD", "MXN", "ZAR", "LTL", "SAR", "MTL", "CAD", "CHF", "HUF", "GBP", "TRY", "ISK", "CYP", "ROL", "AUD", "EUR", "NOK", "CNY"
-]
+["USD", "PHP", "NZD", "MDL", "KZT", "VND", "ILS", "UAH", "MYR", "KRW", "SEK", "JPY",
+"GEL", "SIT", "RON", "HKD", "SKK", "TRL", "LVL", "PLN", "BGN", "HRK", "EGP", "IDR",
+"THB", "BRL", "RUB", "INR", "DKK", "CZK", "EEK", "LBP", "SGD", "MXN", "ZAR", "LTL",
+"SAR", "MTL", "CAD", "CHF", "HUF", "GBP", "TRY", "ISK", "CYP", "ROL", "AUD", "EUR",
+"NOK", "CNY"]
 ```
 
 ## Quick Start
 
 ### Prerequisites
 
-- Rust 1.70+ (install via [rustup](https://rustup.rs/))
+- Rust 1.75+ (install via [rustup](https://rustup.rs/))
 - fulfilled `.env` file from example
 
 ### Run
 
 ```bash
-# Clone and run
-cargo run --release
+# Seed the DB
+cargo run --release --bin seed
+
+# Run the server with debug logging
+RUST_LOG=debug cargo run
 ```
 
 The server will:
 
 1. Create the SQLite database
-2. Fetch historical rates from all providers
-3. Start the HTTP server on `http://0.0.0.0:8080`
+2. Seed DB with available historical data
+3. Fetch historical rates from all providers up to today
+4. Start the HTTP server on `http://0.0.0.0:8080`
 
 ## Database Seeding
 
@@ -73,15 +79,6 @@ docker-compose run --rm seed-db
 
 # Start the server (with SYNC_ON_STARTUP=false to skip initial sync)
 docker-compose up -d currency-rates-api
-```
-
-#### Update environment variables:
-
-After seeding, you can set `SYNC_ON_STARTUP=false` in `docker-compose.yml` to prevent the server from fetching historical data on startup, as the database is already populated.
-
-```yaml
-environment:
-  - SYNC_ON_STARTUP=false # Database is already seeded
 ```
 
 ### Benefits
@@ -218,6 +215,8 @@ automatically when saved to the database.
 - **History**: Available daily
 - **Update**: Daily
 
+### Existing providers limitation
+
 Since each provider has USD as a non-base currency, the actual USD/XXX rates are
 calculated upon data synchronization.
 
@@ -329,22 +328,6 @@ docker-compose logs -f currency-rates-api
 
 # Stop
 docker-compose down
-```
-
-### With Database Seeding
-
-For faster startup and reduced API calls, seed the database first:
-
-```bash
-# Build the image
-docker-compose build
-
-# Seed the database (one-time operation, takes a few minutes)
-docker-compose run --rm seed-db
-
-# Start the server with seeding disabled
-# (Edit docker-compose.yml: set SYNC_ON_STARTUP=false)
-docker-compose up -d currency-rates-api
 ```
 
 The database is persisted in `./docker-data/` on the host.
