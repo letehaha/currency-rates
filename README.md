@@ -178,10 +178,17 @@ GET /currencies
 
 ```json
 {
-  "EUR": "Euro",
-  "USD": "US Dollar",
-  "GBP": "British Pound",
-  "UAH": "Ukrainian Hryvnia"
+  "GBP": {
+    "name": "British Pound",
+    "min_date": "1999-01-04",
+    "max_date": "2025-11-28"
+  },
+  "PLN": {
+    "name": "Polish Zloty",
+    "min_date": "1999-01-04",
+    "max_date": "2025-11-28"
+  }
+  // ....
 }
 ```
 
