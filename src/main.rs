@@ -4,9 +4,12 @@ use tokio::net::TcpListener;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use std::path::PathBuf;
+
 use currency_rates::{
     Config, EcbProvider, NbuProvider, ProviderRegistry, RatesRepository, RatesService,
     api::{self, AppState},
+    seed,
 };
 
 #[tokio::main]
@@ -15,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "currency_rates=info,tower_http=debug".into()),
+                .unwrap_or_else(|_| "currency_rates=info,tower_http=info".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -36,6 +39,62 @@ async fn main() -> anyhow::Result<()> {
     let repository = RatesRepository::new(pool);
     repository.init().await?;
     tracing::info!("Database initialized");
+
+    // Seed database from bundled files if enabled and database is empty
+    if config.seed_on_startup {
+        let ecb_count = repository.get_rates_count("ecb").await?;
+        let nbu_count = repository.get_rates_count("nbu").await?;
+
+        if ecb_count == 0 && nbu_count == 0 {
+            tracing::info!("Database is empty, seeding from bundled files...");
+
+            let ecb_seed_path = std::env::var("ECB_SEED_PATH")
+                .ok()
+                .map(PathBuf::from)
+                .or_else(|| {
+                    let default = PathBuf::from("seed_data/ecb-full-hist.xml");
+                    if default.exists() {
+                        Some(default)
+                    } else {
+                        None
+                    }
+                });
+
+            let nbu_seed_path = std::env::var("NBU_SEED_PATH")
+                .ok()
+                .map(PathBuf::from)
+                .or_else(|| {
+                    let default = PathBuf::from("seed_data/nbu-full-hist.json");
+                    if default.exists() {
+                        Some(default)
+                    } else {
+                        None
+                    }
+                });
+
+            if ecb_seed_path.is_some() || nbu_seed_path.is_some() {
+                if let Err(e) = seed::seed_database(
+                    &repository,
+                    ecb_seed_path.as_deref(),
+                    nbu_seed_path.as_deref(),
+                )
+                .await
+                {
+                    tracing::error!("Seeding failed: {}", e);
+                } else {
+                    tracing::info!("Database seeding completed");
+                }
+            } else {
+                tracing::info!("No seed files found, skipping seeding");
+            }
+        } else {
+            tracing::info!(
+                "Database already contains data (ECB: {} records, NBU: {} records), skipping seeding",
+                ecb_count,
+                nbu_count
+            );
+        }
+    }
 
     // Register providers
     // All providers store rates with USD as the internal base currency

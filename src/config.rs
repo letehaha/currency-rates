@@ -8,6 +8,8 @@ pub struct Config {
     /// Default base currency for API responses when not specified by client.
     /// Note: Internal storage always uses USD as the base currency.
     pub default_api_base: String,
+    /// Seed database from bundled files on startup (only if database is empty)
+    pub seed_on_startup: bool,
     pub sync_on_startup: bool,
     pub sync_cron: String,
 }
@@ -28,6 +30,10 @@ impl Config {
                 .unwrap_or(8080),
 
             default_api_base: env::var("DEFAULT_API_BASE").unwrap_or_else(|_| "USD".to_string()),
+
+            seed_on_startup: env::var("SEED_ON_STARTUP")
+                .map(|v| v == "true" || v == "1")
+                .unwrap_or(true),
 
             sync_on_startup: env::var("SYNC_ON_STARTUP")
                 .map(|v| v == "true" || v == "1")
