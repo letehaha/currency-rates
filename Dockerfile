@@ -43,9 +43,6 @@ WORKDIR /app
 COPY --from=builder /app/target/release/currency-rates /usr/local/bin/currency-rates
 COPY --from=builder /app/target/release/seed /usr/local/bin/seed-db
 
-# Copy environment file
-COPY .env ./
-
 # Copy seed data files (optional - comment out if not using)
 COPY seed_data ./seed_data
 
